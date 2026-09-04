@@ -161,6 +161,8 @@
                                 <span class="badge bg-secondary">Created</span>
                             {% elif entry.action == 'serviced' %}
                                 <span class="badge bg-success">Serviced</span>
+                            {% elif entry.action == 'moved' %}
+                                <span class="badge bg-success">Moved</span>
 
                             <!-- EquipmentRequest entries use request_type -->
                             {% elif entry.request_type == 'service' %}
@@ -217,6 +219,8 @@
                                 <span class="badge bg-danger">Rejected</span>
                             {% elif entry.status == 'completed' %}
                                 <span class="badge bg-secondary">Completed</span>
+                            {% elif entry.action == 'moved' %}
+                                <span class="badge bg-success">Moved</span>
                             {% else %}
                                 —
                             {% endif %}
@@ -232,8 +236,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% elif entry.action == 'moved' %}
-                <span class="badge bg-success">Moved</span>
             {% else %}
                 <p class="text-muted mb-0">No history recorded for this equipment yet.</p>
             {% endif %}
