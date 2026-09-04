@@ -100,7 +100,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database - uses Railway's PostgreSQL in production, your local db in development
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')
+        default=os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3'),
+        conn_max_age=600,       # reuse connections for 10 minutes
     )
 }
 

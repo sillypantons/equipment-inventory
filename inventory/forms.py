@@ -22,6 +22,7 @@ class EquipmentRequestForm(forms.Form):
     )
     message = forms.CharField(
         label="Request Message",
+        required=False,
         widget=forms.Textarea(attrs={
             'class': 'form-control',
             'rows': 4,
