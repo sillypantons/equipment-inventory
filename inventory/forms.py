@@ -60,3 +60,9 @@ class SignInOutForm(forms.Form):
         choices=LOCATION_CHOICES,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+class ExcelImportForm(forms.Form):
+    excel_file = forms.FileField(
+        label="Select Excel File",
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.xlsx,.xls'})
+    )

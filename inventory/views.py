@@ -510,3 +510,103 @@ def bulk_update_requests(request):
         messages.success(request, f"{len(selected_ids)} request(s) updated to {new_status}.")
 
     return redirect('request_dashboard')
+
+import pandas as pd
+from datetime import datetime
+from .forms import ExcelImportForm
+
+def import_equipment_view(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        messages.error(request, "You need admin permission to access this page.")
+        return redirect('equipment_list')
+
+    if request.method == 'POST':
+        form = ExcelImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = request.FILES['excel_file']
+
+            # Check file extension
+            if not excel_file.name.endswith(('.xlsx', '.xls')):
+                messages.error(request, "Invalid file type. Please upload an Excel file.")
+                return redirect('import_equipment_view')
+
+            SHEETS = ["GEN", "PUMP", "SUBS", "DOSING"]
+            total_created = 0
+            total_updated = 0
+            errors = []
+
+            for sheet_name in SHEETS:
+                try:
+                    # Reset file pointer for each sheet read
+                    excel_file.seek(0)
+                    df = pd.read_excel(excel_file, sheet_name=sheet_name)
+                    df.columns = df.columns.str.strip().str.lower()
+
+                    created_count = 0
+                    updated_count = 0
+
+                    for _, row in df.iterrows():
+                        raw_SAGE = row.get("sage reference")
+
+                        if pd.isna(raw_SAGE):
+                            continue
+
+                        SAGE_num = str(raw_SAGE).strip().upper()
+
+                        if not SAGE_num:
+                            continue
+
+                        equipment, created = Equipment.objects.update_or_create(
+                            SAGE_num=SAGE_num,
+                            defaults={
+                                "type":          clean_string(row.get("equipment type")),
+                                "serial_number": clean_string(row.get("serial number")),
+                                "location":      clean_string(row.get("location")),
+                                "purchase_date": parse_date(row.get("date into service")),
+                                "last_service":  parse_date(row.get("last service")),
+                                "notes":         clean_string(row.get("notes")),
+                            }
+                        )
+
+                        if created:
+                            created_count += 1
+                        else:
+                            updated_count += 1
+
+                    total_created += created_count
+                    total_updated += updated_count
+
+                except Exception as e:
+                    errors.append(f"Sheet '{sheet_name}': {str(e)}")
+
+            if errors:
+                for error in errors:
+                    messages.warning(request, f"Warning — {error}")
+
+            messages.success(request, f"Import complete: {total_created} created, {total_updated} updated across {len(SHEETS)} sheets.")
+            return redirect('import_equipment_view')
+    else:
+        form = ExcelImportForm()
+
+    # Get last import summary for display
+    return render(request, 'inventory/import_equipment.html', {
+        'form': form,
+    })
+
+
+# Helper functions used by the import view
+def clean_string(value):
+    if pd.isna(value):
+        return ""
+    return str(value).strip()
+
+
+def parse_date(value):
+    if pd.isna(value):
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    try:
+        return pd.to_datetime(value).date()
+    except Exception:
+        return None
