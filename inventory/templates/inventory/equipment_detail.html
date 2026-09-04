@@ -18,11 +18,13 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Equipment Details</h1>
+        <div class="d-flex gap-2">
         <a href="/" class="btn btn-secondary mb-4">← Back to Inventory</a>
-        <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button class="btn btn-danger btn-sm">Logout</button>
-        </form>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button class="btn btn-danger btn-sm">Logout</button>
+            </form>
+        </div>
     </div>
 
     <!-- Success messages -->

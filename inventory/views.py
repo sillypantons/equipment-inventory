@@ -479,3 +479,34 @@ def sign_in_out(request, SAGE_num):
         'item': item,
         'form': form,
     })
+
+def bulk_update_requests(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        messages.error(request, "You need admin permission to access the request dashboard.")
+        return redirect('equipment_list')
+
+    if request.method == 'POST':
+        selected_ids = request.POST.getlist('selected_requests')
+        new_status   = request.POST.get('bulk_status')
+
+        if not selected_ids:
+            messages.error(request, "No requests selected.")
+            return redirect('request_dashboard')
+
+        if not new_status:
+            messages.error(request, "No status selected.")
+            return redirect('request_dashboard')
+
+        requests_to_update = EquipmentRequest.objects.filter(id__in=selected_ids)
+
+        for eq_request in requests_to_update:
+            eq_request.status = new_status
+            if new_status == 'completed':
+                eq_request.date_completed = timezone.now()
+            else:
+                eq_request.date_completed = None
+            eq_request.save()
+
+        messages.success(request, f"{len(selected_ids)} request(s) updated to {new_status}.")
+
+    return redirect('request_dashboard')

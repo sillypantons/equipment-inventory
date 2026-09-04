@@ -13,5 +13,6 @@ urlpatterns = [
     path('dashboard/delete/<int:request_id>/', views.delete_request, name='delete_request'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('dashboard/bulk-update/', views.bulk_update_requests, name='bulk_update_requests'),
 
 ]
