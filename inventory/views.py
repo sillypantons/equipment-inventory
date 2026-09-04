@@ -458,6 +458,8 @@ def sign_in_out(request, SAGE_num):
             item.location = new_location
             item.save()
 
+            from django.utils import timezone
+
             # Log to item history
             EquipmentHistory.objects.create(
                 equipment=item,
