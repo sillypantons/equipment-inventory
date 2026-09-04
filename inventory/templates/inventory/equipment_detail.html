@@ -47,6 +47,11 @@
                     target="_blank">
                         Check Sheet
                 </a>
+                <!-- Sign In/Out button - available to all users -->
+                <a href="{% url 'sign_in_out' item.SAGE_num %}" 
+                class="btn btn-success">
+                    Sign In / Out
+                </a>
             </div>
         </div>
         <div class="card-body">
@@ -227,6 +232,8 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% elif entry.action == 'moved' %}
+                <span class="badge bg-success">Moved</span>
             {% else %}
                 <p class="text-muted mb-0">No history recorded for this equipment yet.</p>
             {% endif %}

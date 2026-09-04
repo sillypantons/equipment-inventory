@@ -69,6 +69,7 @@ class EquipmentHistory(models.Model):
         ('edited',   'Edited'),
         ('serviced', 'Serviced'),
         ('request',  'Request'),
+        ('moved',    'Moved'),
     ]
 
     equipment   = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='history')

@@ -441,3 +441,39 @@ def edit_equipment(request, SAGE_num):
         'item': item,
         'form': form,
     })
+
+from .forms import SignInOutForm
+
+def sign_in_out(request, SAGE_num):
+    item = get_object_or_404(Equipment, SAGE_num=SAGE_num)
+
+    if request.method == 'POST':
+        form = SignInOutForm(request.POST)
+        if form.is_valid():
+            name         = form.cleaned_data['name']
+            new_location = form.cleaned_data['new_location']
+            old_location = item.location
+
+            # Update the equipment location
+            item.location = new_location
+            item.save()
+
+            # Log to item history
+            EquipmentHistory.objects.create(
+                equipment=item,
+                action='moved',
+                description=f"Location changed from '{old_location}' to '{new_location}'",
+                performed_by=name,
+                status='completed',
+                date_completed=timezone.now(),
+            )
+
+            messages.success(request, f"Location updated to {new_location} successfully.")
+            return redirect('equipment_detail', SAGE_num=SAGE_num)
+    else:
+        form = SignInOutForm()
+
+    return render(request, 'inventory/sign_in_out.html', {
+        'item': item,
+        'form': form,
+    })
