@@ -165,9 +165,9 @@ def delete_request(request, request_id):
 
     eq_request = get_object_or_404(EquipmentRequest, id=request_id)
 
-    if request.method == 'POST':
-        eq_request.delete()
-        messages.success(request, "Request deleted successfully.")
+    # if request.method == 'POST':
+    eq_request.delete()
+    messages.success(request, "Request deleted successfully.")
 
     return redirect('request_dashboard')
 
@@ -325,23 +325,23 @@ def request_dashboard(request):
 
 # @login_required(login_url='login')
 # @user_passes_test(is_admin, login_url='login')
-def update_request_status(request, request_id):
+def update_request_status(request, request_id, new_status):
     if not request.user.is_authenticated or not request.user.is_staff:
         messages.error(request, "You need admin permission to access the request dashboard.")
         return redirect('equipment_list')
     
     eq_request = get_object_or_404(EquipmentRequest, id=request_id)
 
-    if request.method == 'POST':
-        new_status = request.POST.get('status')
-        if new_status in ['pending', 'accepted', 'rejected', 'completed']:
-            eq_request.status = new_status
-            if new_status == 'completed':
-                from django.utils import timezone
-                eq_request.date_completed = timezone.now()
-            else:
-                eq_request.date_completed = None
-            eq_request.save()
+    # if request.method == 'POST':
+    #     new_status = request.POST.get('status')
+    if new_status in ['pending', 'accepted', 'rejected', 'completed']:
+        eq_request.status = new_status
+        if new_status == 'completed':
+            from django.utils import timezone
+            eq_request.date_completed = timezone.now()
+        else:
+            eq_request.date_completed = None
+        eq_request.save()
 
     return redirect('request_dashboard')
 
