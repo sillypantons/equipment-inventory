@@ -1,4 +1,6 @@
 # from urllib import request
+# equipment list page, search, filter, sort and pagination functionality
+# also calculated the next service date based on last service date and a 6 month interval (182 days) and displays it in the list view.
 
 from datetime import timezone
 from django.shortcuts import redirect, render, get_object_or_404
@@ -74,6 +76,9 @@ def equipment_list(request):
         "query":           query,            # pass back so search box stays filled
     })
 
+# how the filters are grouped in the equipment list page - 
+# currently hard coded but could be made dynamic in future.
+
 def get_type_groups():
     # Group equipment types by category based on keywords.
     all_types = Equipment.objects.values_list('type', flat=True).distinct().order_by('type')
@@ -90,7 +95,7 @@ def get_type_groups():
         t_lower = t.lower()
         if "generator" in t_lower:
             groups["Generators"].append(t)
-        elif "dosing" in t_lower:
+        elif "BETA" in t_lower or "SIGMA" in t_lower:
             groups["Dosing Pumps"].append(t)
         elif "sub" in t_lower:
             groups["Submersibles"].append(t)
@@ -109,6 +114,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from .forms import EquipmentRequestForm
 from itertools import chain
 # from operator import attrgetter
+# creates request for equipment and logs it to the item history. Also displays the item history and request history on the item detail page.
 
 def equipment_detail(request, SAGE_num):
     item = get_object_or_404(Equipment, SAGE_num=SAGE_num)
@@ -157,6 +163,9 @@ def equipment_detail(request, SAGE_num):
         # 'service_form_value': service_form_value(item),
     })
 
+# might be worth perging all requests after a few years? or an option to delete certain ones after being completed.
+# would deleting an item also delete that items request? 
+# write offs?
 
 def delete_request(request, request_id):
     if not request.user.is_authenticated or not request.user.is_staff:
@@ -171,131 +180,6 @@ def delete_request(request, request_id):
 
     return redirect('request_dashboard')
 
-
-# def equipment_detail(request, SAGE_num):
-    item = get_object_or_404(Equipment, SAGE_num=SAGE_num)
-    request_history = EquipmentRequest.objects.filter(equipment=item)
-    
-    if request.method == 'POST':
-        form = EquipmentRequestForm(request.POST)
-        if form.is_valid():
-            name    = form.cleaned_data['requester_name']
-            email   = form.cleaned_data['requester_email']
-            message_text = form.cleaned_data['message']
-
-            # Email to manager
-            subject = f"Equipment Request: {item.SAGE_num} - {item.type}"
-            body = f"""
-A new equipment request has been submitted via the inventory system.
-
-Equipment Details:
-------------------
-SAGE Reference: {item.SAGE_num}
-Type:           {item.type}
-Location:       {item.location}
-
-Requested By:   {name}
-Requester Email:{email}
-
-Message:
---------
-{message_text}
-            """
-
-            # Confirmation email to requester
-            confirmation_body = f"""
-Hi {name},
-
-Your request for the following equipment has been submitted:
-
-  SAGE Reference: {item.SAGE_num}
-  Type:           {item.type}
-  Location:       {item.location}
-
-Your message:
-{message_text}
-
-regards,
-Equipment Inventory System
-            """
-
-            try:
-                # Send to manager
-                send_mail(
-                    subject=subject,
-                    message=body,
-                    from_email=None,
-                    recipient_list=['alex.campbell@pantonmcleod.co.uk'],  # sends to manager, could be multiple if needed
-                    fail_silently=False,
-                )
-                # Send confirmation to requester
-                send_mail(
-                    subject=f"Request Confirmation - {item.SAGE_num}",
-                    message=confirmation_body,
-                    from_email=None,
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
-                
-                 # Save request to database
-                EquipmentRequest.objects.create(
-                    equipment=item,
-                    requester_name=name,
-                    requester_email=email,
-                    message=message_text,
-                    status='pending',
-                )
-                
-                # messages.success(request, f"Request submitted successfully. A confirmation has been sent to {email}.")
-                return render(request, 'request_success.html', {'item': item})
-
-            except Exception as e:
-                messages.error(request, "There was a problem sending your request. Please try again.")
-                print(f"Email error: {e}")
-
-    else:
-        form = EquipmentRequestForm()
-
-    return render(request, 'inventory/equipment_detail.html', {
-        'item': item,
-        'form': form,
-        'request_history': request_history,
-        # 'service_form_value': get_service_form_value(item), # enable if using dynamic form values in get_service_form_value
-    })
-
-# Just used the OTHER selection in form - dont need to use this as defaults to OTHER if value does not match
-# def get_service_form_value(item):
-    # Return the correct service form value based on equipment type.
-    type_lower = item.type.lower()
-
-    # Generators - check kVA size
-    if "generator" in type_lower:
-        # Extract the kVA number from the type string e.g. "3.5 kVA Generator"
-        import re
-        match = re.search(r'(\d+\.?\d*)\s*kva', type_lower)
-        if match:
-            kva = float(match.group(1))
-            if kva <= 3.5:
-                return "Small%20Generator"    
-            else:
-                return "Large%20Generator"
-
-    elif "dosing" in type_lower:
-        return "Dosing%20Pump"                
-
-    elif "submersible" in type_lower:
-        return "Submersible%20Pump"                
-
-    elif "high" in type_lower:
-        return "2%5C%22%20Pump"
-    
-    elif "trash" in type_lower:
-        return "Trash%20Pump"
-
-    # Fallback if nothing matches
-    return ""
-
-
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
@@ -305,6 +189,8 @@ def is_admin(user):
 
 # @login_required(login_url='login')
 # @user_passes_test(is_admin, login_url='login')
+# keep admin check if someone tries to access the dashboard throuf pasting url without admin account logged in.
+
 def request_dashboard(request):
     if not request.user.is_authenticated or not request.user.is_staff:
         messages.error(request, "You need admin permission to access the request dashboard.")
@@ -325,6 +211,8 @@ def request_dashboard(request):
 
 # @login_required(login_url='login')
 # @user_passes_test(is_admin, login_url='login')
+# in the dashboard will allow admins to change the status of requests to accepted, rejected, completed or left as pending.
+
 def update_request_status(request, request_id, new_status):
     if not request.user.is_authenticated or not request.user.is_staff:
         messages.error(request, "You need admin permission to access the request dashboard.")
@@ -390,6 +278,9 @@ class EquipmentEditForm(ModelForm):
 
 from .models import Equipment, EquipmentRequest, EquipmentHistory
 
+# only admin roles can edit equipment details 
+# Add a delete item function to remove equipment from the database if needed
+
 def edit_equipment(request, SAGE_num):
     if not request.user.is_authenticated or not request.user.is_staff:
         messages.error(request, "You need admin permission to edit equipment.")
@@ -443,6 +334,7 @@ def edit_equipment(request, SAGE_num):
     })
 
 from .forms import SignInOutForm
+# signing in and out equipment items - to update location and tracking accuracy
 
 def sign_in_out(request, SAGE_num):
     item = get_object_or_404(Equipment, SAGE_num=SAGE_num)
@@ -480,6 +372,9 @@ def sign_in_out(request, SAGE_num):
         'form': form,
     })
 
+# in request dashboard allows for multiple rquests to be processed at once 
+# current solution is a bit puggled might change in future.
+
 def bulk_update_requests(request):
     if not request.user.is_authenticated or not request.user.is_staff:
         messages.error(request, "You need admin permission to access the request dashboard.")
@@ -514,6 +409,8 @@ def bulk_update_requests(request):
 import pandas as pd
 from datetime import datetime
 from .forms import ExcelImportForm
+
+# updates the data base with the excel file data - only for admin users
 
 def import_equipment_view(request):
     if not request.user.is_authenticated or not request.user.is_staff:
