@@ -164,7 +164,7 @@ tr:hover { background-color: #f5f5f5; }
                                 {% for t in group_types %}
                                 <div class="form-check">
                                     <input
-                                        class="form-check-input"
+                                        class="form-check-input group-checkbox-{{ forloop.parentloop.counter }}"
                                         type="checkbox"
                                         name="type"
                                         value="{{ t }}"
@@ -278,60 +278,6 @@ tr:hover { background-color: #f5f5f5; }
                     </nav>
                 </div>
             </div>
-    
-    <!-- Sort script must be inside the form -->
-    <!-- <script>
-    document.querySelectorAll('.sort-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const sortInput = document.getElementById('sort-input');
-            const directionInput = document.getElementById('direction-input');
-            const clickedSort = this.dataset.sort;
-
-            if (sortInput.value === clickedSort) {
-                // Same column — flip direction
-                directionInput.value = directionInput.value === 'asc' ? 'desc' : 'asc';
-            } else {
-                // New column — default to ascending
-                sortInput.value = clickedSort;
-                directionInput.value = 'asc';
-            }
-
-            // Reset to page 1 when sorting changes
-            const pageInput = document.querySelector('input[name="page"]');
-            if (pageInput) pageInput.value = 1;
-
-            this.closest('form').submit();
-        });
-    });
-
-    // Select all checkbox logic for each group
-    document.querySelectorAll('.group-select-all').forEach(function(selectAll) {
-        const group = selectAll.dataset.group;
-        const groupCheckboxes = document.querySelectorAll(`.group-checkbox-${group}`);
-
-        // Check if all boxes in this group are already checked on page load
-        const allChecked = Array.from(groupCheckboxes).every(cb => cb.checked);
-        if (allChecked && groupCheckboxes.length > 0) {
-            selectAll.checked = true;
-        }
-
-        // When select all is clicked, check/uncheck all in the group
-        selectAll.addEventListener('change', function() {
-            groupCheckboxes.forEach(cb => cb.checked = this.checked);
-        });
-
-        // When any individual checkbox changes, update the select all state
-        groupCheckboxes.forEach(function(cb) {
-            cb.addEventListener('change', function() {
-                const allNowChecked = Array.from(groupCheckboxes).every(cb => cb.checked);
-                const noneChecked   = Array.from(groupCheckboxes).every(cb => !cb.checked);
-                selectAll.checked        = allNowChecked;
-                selectAll.indeterminate  = !allNowChecked && !noneChecked;
-            });
-        });
-    });
-    </script> -->
-
     </form>
 </div>
 
