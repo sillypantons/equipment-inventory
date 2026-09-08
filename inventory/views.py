@@ -95,7 +95,7 @@ def get_type_groups():
         t_lower = t.lower()
         if "generator" in t_lower:
             groups["Generators"].append(t)
-        elif "BETA" in t_lower or "SIGMA" in t_lower:
+        elif "beta" in t_lower or "sigma" in t_lower:
             groups["Dosing Pumps"].append(t)
         elif "sub" in t_lower:
             groups["Submersibles"].append(t)
@@ -458,13 +458,19 @@ def import_equipment_view(request):
                             defaults={
                                 "type":          clean_string(row.get("equipment type")),
                                 "serial_number": clean_string(row.get("serial number")),
-                                "location":      clean_string(row.get("location")),
+                                "location":      clean_string(row.get("location")), 
+                                # if moving to only setting a new location on creation, comment out the above line
                                 "purchase_date": parse_date(row.get("date into service")),
                                 "last_service":  parse_date(row.get("last service")),
                                 "notes":         clean_string(row.get("notes")),
                             }
                         )
 
+                        # Only set location if this is a brand new record
+                        # if created:
+                        #     equipment.location = clean_string(row.get("location"))
+                        #     equipment.save()
+                        
                         if created:
                             created_count += 1
                         else:
