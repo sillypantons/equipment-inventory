@@ -7,7 +7,7 @@
         <h1>Import Equipment</h1>
         <div class="d-flex gap-2 align-items-center">
             <a href="/" class="btn btn-secondary">← Back to Inventory</a>
-            <form method="post" action="{% url 'logout' %}">
+            <form method="post" action="{% url 'logout' %}" class="m-0">
                 {% csrf_token %}
                 <button class="btn btn-danger btn-sm">Logout</button>
             </form>
