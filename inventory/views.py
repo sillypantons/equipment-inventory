@@ -34,9 +34,8 @@ def equipment_list(request):
         equipment = equipment.filter(type__in=selected_types)
     
     from django.db.models import F, ExpressionWrapper, DateField
-    from django.utils import timezone
     from datetime import timedelta
-
+    # this calculated varialbe is here just to allow the sort functionality as dates dont sort good
     equipment = equipment.annotate(
         next_service_calc=ExpressionWrapper(
             F("last_service") + timedelta(days=182),
