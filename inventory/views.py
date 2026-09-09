@@ -78,6 +78,7 @@ def equipment_list(request):
 
 # how the filters are grouped in the equipment list page - 
 # currently hard coded but could be made dynamic in future.
+# might be better to sort through SAGE as already catagorised into types there
 
 def get_type_groups():
     # Group equipment types by category based on keywords.
