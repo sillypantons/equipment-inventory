@@ -249,6 +249,62 @@ def update_request_status(request, request_id, new_status):
 
     return redirect('request_dashboard')
 
+# in request dashboard allows for multiple rquests to be processed at once 
+# current solution is a bit puggled might change in future.
+def bulk_update_requests(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        messages.error(request, "You need admin permission to access the request dashboard.")
+        return redirect('equipment_list')
+
+    if request.method == 'POST':
+        selected_ids = request.POST.getlist('selected_requests')
+        new_status   = request.POST.get('bulk_status')
+
+        if not selected_ids:
+            messages.error(request, "No requests selected.")
+            return redirect('request_dashboard')
+
+        if not new_status:
+            messages.error(request, "No status selected.")
+            return redirect('request_dashboard')
+
+        requests_to_update = EquipmentRequest.objects.filter(id__in=selected_ids)
+        updated_service_count = 0
+
+        for eq_request in requests_to_update:
+            eq_request.status = new_status
+            if new_status == 'completed':
+                from django.utils import timezone
+                eq_request.date_completed = timezone.now()
+
+                # Update last service date if it was a service or repair request
+                if eq_request.request_type in ['service', 'repair']:
+                    equipment = eq_request.equipment
+                    equipment.last_service = timezone.now().date()
+                    equipment.save()
+                    updated_service_count += 1
+
+                    # Log to item history
+                    EquipmentHistory.objects.create(
+                        equipment=equipment,
+                        action='serviced',
+                        description=f"Service date updated automatically from completed {eq_request.request_type} request.",
+                        performed_by=request.user.username,
+                        status='completed',
+                        date_completed=timezone.now(),
+                    )
+            else:
+                eq_request.date_completed = None
+            eq_request.save()
+
+        success_msg = f"{len(selected_ids)} request(s) updated to {new_status}."
+        if updated_service_count > 0:
+            success_msg += f" {updated_service_count} item(s) had their service date updated."
+
+        messages.success(request, success_msg)
+
+    return redirect('request_dashboard')
+
 
 def login_view(request):
     if request.user.is_authenticated and request.user.is_staff:
@@ -387,62 +443,6 @@ def sign_in_out(request, SAGE_num):
         'item': item,
         'form': form,
     })
-
-# in request dashboard allows for multiple rquests to be processed at once 
-# current solution is a bit puggled might change in future.
-
-def bulk_update_requests(request):
-    if not request.user.is_authenticated or not request.user.is_staff:
-        messages.error(request, "You need admin permission to access the request dashboard.")
-        return redirect('equipment_list')
-
-    if request.method == 'POST':
-        selected_ids = request.POST.getlist('selected_requests')
-        new_status   = request.POST.get('bulk_status')
-
-        if not selected_ids:
-            messages.error(request, "No requests selected.")
-            return redirect('request_dashboard')
-
-        if not new_status:
-            messages.error(request, "No status selected.")
-            return redirect('request_dashboard')
-
-        requests_to_update = EquipmentRequest.objects.filter(id__in=selected_ids)
-        updated_service_count = 0
-
-        for eq_request in requests_to_update:
-            eq_request.status = new_status
-            if new_status == 'completed':
-                eq_request.date_completed = timezone.now()
-
-                # Update last service date if it was a service or repair request
-                if eq_request.request_type in ['service', 'repair']:
-                    equipment = eq_request.equipment
-                    equipment.last_service = timezone.now().date()
-                    equipment.save()
-                    updated_service_count += 1
-
-                    # Log to item history
-                    EquipmentHistory.objects.create(
-                        equipment=equipment,
-                        action='serviced',
-                        description=f"Service date updated automatically from completed {eq_request.request_type} request.",
-                        performed_by=request.user.username,
-                        status='completed',
-                        date_completed=timezone.now(),
-                    )
-            else:
-                eq_request.date_completed = None
-            eq_request.save()
-
-        success_msg = f"{len(selected_ids)} request(s) updated to {new_status}."
-        if updated_service_count > 0:
-            success_msg += f" {updated_service_count} item(s) had their service date updated."
-
-        messages.success(request, success_msg)
-
-    return redirect('request_dashboard')
 
 import pandas as pd
 from datetime import datetime
