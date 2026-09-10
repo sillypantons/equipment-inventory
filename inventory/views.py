@@ -219,7 +219,8 @@ def update_request_status(request, request_id, new_status):
         return redirect('equipment_list')
     
     eq_request = get_object_or_404(EquipmentRequest, id=request_id)
-
+    updated_service = False  # Flag to track if any service date was updated
+    
     # if request.method == 'POST':
     #     new_status = request.POST.get('status')
     if new_status in ['pending', 'accepted', 'rejected', 'completed']:
