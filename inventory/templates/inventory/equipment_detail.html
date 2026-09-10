@@ -11,6 +11,11 @@
     border-color: #e8710f;
     color: white;
 }
+.wrap-text {
+    word-wrap: break-word;
+    white-space: normal;
+    max-width: 300px;
+}
 </style>
 
 <div class="container mt-4">
@@ -188,7 +193,7 @@
                                 {% endif %}
                             {% endif %}
                         </td>
-                        <td>
+                        <td class="wrap-text">
                             {% if entry.description %}
                                 <button class="btn btn-sm btn-light"
                                         type="button"
@@ -197,7 +202,7 @@
                                     View Details
                                 </button>
                                 <div class="collapse mt-1" id="history-{{ forloop.counter }}">
-                                    <pre class="mb-0 small">{{ entry.description }}</pre>
+                                    <pre class="mb-0 small wrap-text">{{ entry.description }}</pre>
                                 </div>
                             {% elif entry.message %}
                                 <button class="btn btn-sm btn-light"
@@ -207,7 +212,7 @@
                                     View Details
                                 </button>
                                 <div class="collapse mt-1" id="history-{{ forloop.counter }}">
-                                    <pre class="mb-0 small">{{ entry.message }}</pre>
+                                    <pre class="mb-0 small wrap-text">{{ entry.message }}</pre>
                                 </div>
                             {% else %}
                                 —

@@ -203,8 +203,14 @@ def request_dashboard(request):
     if status_filter:
         requests = requests.filter(status=status_filter)
 
+    # pagination
+    paginator = Paginator(requests, 20)  # 20 items per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)    # page_number if go back to old
+
     return render(request, 'inventory/request_dashboard.html', {
-        'requests': requests,
+        'requests': page_obj,  # Use the paginated queryset
+        'page_obj': page_obj,
         'status_filter': status_filter,
     })
 
