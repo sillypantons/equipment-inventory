@@ -233,6 +233,7 @@ def update_request_status(request, request_id, new_status):
                 equipment = eq_request.equipment
                 equipment.last_service = timezone.now().date()
                 equipment.save()
+                updated_service = True
 
                 # Log to item history
                 EquipmentHistory.objects.create(
@@ -246,6 +247,11 @@ def update_request_status(request, request_id, new_status):
         else:
             eq_request.date_completed = None
         eq_request.save()
+
+        success_msg = f"{equipment.SAGE_num} request updated to {new_status}."
+        if updated_service == True:
+                    success_msg += f" {equipment.SAGE_num} service date updated."
+        messages.success(request, success_msg)
 
     return redirect('request_dashboard')
 
