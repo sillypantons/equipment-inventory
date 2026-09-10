@@ -248,9 +248,9 @@ def update_request_status(request, request_id, new_status):
             eq_request.date_completed = None
         eq_request.save()
 
-        success_msg = f"{equipment.SAGE_num} request updated to {new_status}."
+        success_msg = f"{eq_request.equipment.SAGE_num} request updated to {new_status}."
         if updated_service == True:
-                    success_msg += f" {equipment.SAGE_num} service date updated."
+                    success_msg += f" {eq_request.equipment.SAGE_num} service date updated."
         messages.success(request, success_msg)
 
     return redirect('request_dashboard')
