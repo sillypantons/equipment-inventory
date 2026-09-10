@@ -346,27 +346,12 @@ def logout_view(request):
     return redirect('login')
 
 
-from django.forms import ModelForm
-from django import forms
-
-class EquipmentEditForm(ModelForm):
-    class Meta:
-        model = Equipment
-        fields = ['type', 'serial_number', 'location', 'purchase_date', 'last_service', 'notes']
-        widgets = {
-            'type':          forms.TextInput(attrs={'class': 'form-control'}),
-            'serial_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'location':      forms.TextInput(attrs={'class': 'form-control'}),
-            'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'last_service':  forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'notes':         forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
-
 
 from .models import Equipment, EquipmentRequest, EquipmentHistory
 
 # only admin roles can edit equipment details 
 # Add a delete item function to remove equipment from the database if needed
+from .forms import EquipmentEditForm
 
 def edit_equipment(request, SAGE_num):
     if not request.user.is_authenticated or not request.user.is_staff:
@@ -419,6 +404,79 @@ def edit_equipment(request, SAGE_num):
         'item': item,
         'form': form,
     })
+
+# delete equipment option when editing equipment details 
+def delete_equipment(request, SAGE_num):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        messages.error(request, "You need admin permission to delete equipment.")
+        return redirect('equipment_detail', SAGE_num=SAGE_num)
+
+    item = get_object_or_404(Equipment, SAGE_num=SAGE_num)
+
+    if request.method == 'POST':
+        item.delete()
+        messages.success(request, f"{SAGE_num} has been deleted from the database.")
+        return redirect('equipment_list')
+
+    return redirect('equipment_detail', SAGE_num=SAGE_num)
+
+# export the deleted equipment details to a csv file for record keeping and auditing purposes.
+def export_equipment(request, SAGE_num):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        messages.error(request, "You need admin permission to export equipment.")
+        return redirect('equipment_detail', SAGE_num=SAGE_num)
+
+    item = get_object_or_404(Equipment, SAGE_num=SAGE_num)
+
+    # Build CSV response
+    import csv
+    from django.http import HttpResponse
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{SAGE_num}_details.csv"'
+
+    writer = csv.writer(response)
+
+    # Equipment details
+    writer.writerow(['Equipment Details'])
+    writer.writerow(['SAGE Reference',  item.SAGE_num])
+    writer.writerow(['Type',            item.type])
+    writer.writerow(['Serial Number',   item.serial_number])
+    writer.writerow(['Location',        item.location])
+    writer.writerow(['Purchase Date',   item.purchase_date])
+    writer.writerow(['Last Service',    item.last_service])
+    writer.writerow(['Next Service',    item.next_service])
+    writer.writerow(['Notes',           item.notes])
+    writer.writerow([])
+
+    # Request history
+    writer.writerow(['Request History'])
+    writer.writerow(['Date', 'Request Type', 'Requested By', 'Email', 'Message', 'Status', 'Date Completed'])
+    for req in EquipmentRequest.objects.filter(equipment=item):
+        writer.writerow([
+            req.date_requested.strftime('%d %b %Y'),
+            req.request_type,
+            req.requester_name,
+            req.requester_email,
+            req.message,
+            req.status,
+            req.date_completed.strftime('%d %b %Y') if req.date_completed else '—',
+        ])
+    writer.writerow([])
+
+    # Item history
+    writer.writerow(['Item History'])
+    writer.writerow(['Date', 'Action', 'Performed By', 'Description'])
+    for entry in EquipmentHistory.objects.filter(equipment=item):
+        writer.writerow([
+            entry.date.strftime('%d %b %Y %H:%M'),
+            entry.action,
+            entry.performed_by,
+            entry.description,
+        ])
+
+    return response
+
 
 from .forms import SignInOutForm
 # signing in and out equipment items - to update location and tracking accuracy
