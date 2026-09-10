@@ -220,7 +220,7 @@ def update_request_status(request, request_id, new_status):
     
     eq_request = get_object_or_404(EquipmentRequest, id=request_id)
     updated_service = False  # Flag to track if any service date was updated
-    
+
     # if request.method == 'POST':
     #     new_status = request.POST.get('status')
     if new_status in ['pending', 'accepted', 'rejected', 'completed']:
@@ -232,6 +232,7 @@ def update_request_status(request, request_id, new_status):
             # Update last service date if it was a service or repair request
             if eq_request.request_type in ['service', 'repair']:
                 equipment = eq_request.equipment
+                old_service_date = equipment.last_service
                 equipment.last_service = timezone.now().date()
                 equipment.save()
                 updated_service = True
@@ -240,7 +241,7 @@ def update_request_status(request, request_id, new_status):
                 EquipmentHistory.objects.create(
                     equipment=equipment,
                     action='serviced',
-                    description=f"Service date updated automatically from completed {eq_request.request_type} request.",
+                    description=f"Service date updated automatically from {old_service_date} to {equipment.last_service} via completed {eq_request.request_type} request.",
                     performed_by=request.user.username,
                     status='completed',
                     date_completed=timezone.now(),
@@ -287,6 +288,7 @@ def bulk_update_requests(request):
                 # Update last service date if it was a service or repair request
                 if eq_request.request_type in ['service', 'repair']:
                     equipment = eq_request.equipment
+                    old_service_date = equipment.last_service
                     equipment.last_service = timezone.now().date()
                     equipment.save()
                     updated_service_count += 1
@@ -295,7 +297,7 @@ def bulk_update_requests(request):
                     EquipmentHistory.objects.create(
                         equipment=equipment,
                         action='serviced',
-                        description=f"Service date updated automatically from completed {eq_request.request_type} request.",
+                        description=f"Service date updated automatically from {old_service_date} to {equipment.last_service} via completed {eq_request.request_type} request.",
                         performed_by=request.user.username,
                         status='completed',
                         date_completed=timezone.now(),
