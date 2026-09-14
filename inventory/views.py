@@ -2,12 +2,20 @@
 # equipment list page, search, filter, sort and pagination functionality
 # also calculated the next service date based on last service date and a 6 month interval (182 days) and displays it in the list view.
 
-from datetime import timezone
 from django.shortcuts import redirect, render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from .models import Equipment, EquipmentRequest
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
 from django.core.paginator import Paginator
+from .models import Equipment, EquipmentRequest, EquipmentHistory
+from .forms import EquipmentEditForm, SignInOutForm, EquipmentRequestForm, ExcelImportForm
+import pandas as pd
+from datetime import datetime
+from itertools import chain
+# from operator import attrgetter
+# from django.core.mail import send_mail
 
 @login_required
 def equipment_list(request):
@@ -107,13 +115,6 @@ def get_type_groups():
     # Remove empty groups
     return {k: v for k, v in groups.items() if v}
 
-
-from django.core.mail import send_mail
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, render, redirect
-from .forms import EquipmentRequestForm
-from itertools import chain
-# from operator import attrgetter
 # creates request for equipment and logs it to the item history. Also displays the item history and request history on the item detail page.
 
 def equipment_detail(request, SAGE_num):
@@ -179,10 +180,6 @@ def delete_request(request, request_id):
     messages.success(request, "Request deleted successfully.")
 
     return redirect('request_dashboard')
-
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import AuthenticationForm
 
 def is_admin(user):
     return user.is_staff  # only Django staff/admin users can access
@@ -345,13 +342,8 @@ def logout_view(request):
         logout(request)
     return redirect('login')
 
-
-
-from .models import Equipment, EquipmentRequest, EquipmentHistory
-
 # only admin roles can edit equipment details 
 # Add a delete item function to remove equipment from the database if needed
-from .forms import EquipmentEditForm
 
 def edit_equipment(request, SAGE_num):
     if not request.user.is_authenticated or not request.user.is_staff:
@@ -477,8 +469,6 @@ def export_equipment(request, SAGE_num):
 
     return response
 
-
-from .forms import SignInOutForm
 # signing in and out equipment items - to update location and tracking accuracy
 
 def sign_in_out(request, SAGE_num):
@@ -516,10 +506,6 @@ def sign_in_out(request, SAGE_num):
         'item': item,
         'form': form,
     })
-
-import pandas as pd
-from datetime import datetime
-from .forms import ExcelImportForm
 
 # updates the data base with the excel file data - only for admin users
 
