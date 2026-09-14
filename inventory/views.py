@@ -17,7 +17,7 @@ from itertools import chain
 # from operator import attrgetter
 # from django.core.mail import send_mail
 
-@login_required
+@login_required(login_url='login')
 def equipment_list(request):
     equipment = Equipment.objects.all()
 
@@ -318,29 +318,29 @@ def bulk_update_requests(request):
     return redirect('request_dashboard')
 
 
-def login_view(request):
-    if request.user.is_authenticated and request.user.is_staff:
-        return redirect('request_dashboard')
+# def login_view(request):
+#     if request.user.is_authenticated and request.user.is_staff:
+#         return redirect('request_dashboard')
 
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            if user.is_staff:
-                login(request, user)
-                return redirect('request_dashboard')
-            else:
-                form.add_error(None, "You do not have permission to access this page.")
-    else:
-        form = AuthenticationForm()
+#     if request.method == 'POST':
+#         form = AuthenticationForm(request, data=request.POST)
+#         if form.is_valid():
+#             user = form.get_user()
+#             if user.is_staff:
+#                 login(request, user)
+#                 return redirect('request_dashboard')
+#             else:
+#                 form.add_error(None, "You do not have permission to access this page.")
+#     else:
+#         form = AuthenticationForm()
 
-    return render(request, 'registration/login.html', {'form': form})
+#     return render(request, 'registration/login.html', {'form': form})
 
 
-def logout_view(request):
-    if request.method == 'POST':
-        logout(request)
-    return redirect('login')
+# def logout_view(request):
+#     if request.method == 'POST':
+#         logout(request)
+#     return redirect('login')
 
 # only admin roles can edit equipment details 
 # Add a delete item function to remove equipment from the database if needed
@@ -372,7 +372,7 @@ def edit_equipment(request, SAGE_num):
             for field, old_val in old_values.items():
                 new_val = getattr(item, field)
                 if str(old_val) != str(new_val):
-                    changes.append(f"{field.replace('_', ' ').title()}: '{old_val}' → '{new_val}'")
+                    changes.append(f"{field.replace('_', ' ').title()}: '{old_val}' -> '{new_val}'")
 
             description = "\n".join(changes) if changes else "No fields changed."
 
