@@ -14,7 +14,7 @@ urlpatterns = [
     path('dashboard/bulk-update/', views.bulk_update_requests, name='bulk_update_requests'),
     path('dashboard/update/<int:request_id>/<str:new_status>/', views.update_request_status, name='update_request_status'),
     path('dashboard/delete/<int:request_id>/', views.delete_request, name='delete_request'),
-    path('login/', auth_views.LoginView.as_view(template_name='admin/login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('import/', views.import_equipment_view, name='import_equipment_view'),
 ]
