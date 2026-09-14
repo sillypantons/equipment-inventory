@@ -14,6 +14,8 @@ from .forms import EquipmentEditForm, SignInOutForm, EquipmentRequestForm, Excel
 import pandas as pd
 from datetime import datetime
 from itertools import chain
+import csv
+from django.http import HttpResponse
 # from operator import attrgetter
 # from django.core.mail import send_mail
 
@@ -421,13 +423,12 @@ def export_equipment(request, SAGE_num):
     item = get_object_or_404(Equipment, SAGE_num=SAGE_num)
 
     # Build CSV response
-    import csv
-    from django.http import HttpResponse
-
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{SAGE_num}_details.csv"'
 
     writer = csv.writer(response)
+
+    from datetime import timedelta
 
     # Equipment details
     writer.writerow(['Equipment Details'])
@@ -437,7 +438,8 @@ def export_equipment(request, SAGE_num):
     writer.writerow(['Location',        item.location])
     writer.writerow(['Purchase Date',   item.purchase_date])
     writer.writerow(['Last Service',    item.last_service])
-    writer.writerow(['Next Service',    item.next_service])
+    next_service_calc = (item.last_service + timedelta(days=182)) if item.last_service else '—'
+    writer.writerow(['Next Service', next_service_calc])
     writer.writerow(['Notes',           item.notes])
     writer.writerow([])
 

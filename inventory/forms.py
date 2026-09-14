@@ -61,13 +61,12 @@ class EquipmentEditForm(ModelForm):
 
     class Meta:
         model = Equipment
-        fields = ['type', 'serial_number', 'location', 'purchase_date', 'last_service', 'next_service', 'notes']
+        fields = ['type', 'serial_number', 'location', 'purchase_date', 'last_service', 'notes']
         widgets = {
             'type':          forms.TextInput(attrs={'class': 'form-control'}),
             'serial_number': forms.TextInput(attrs={'class': 'form-control'}),
             'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'last_service':  forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'next_service':  forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'notes':         forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
